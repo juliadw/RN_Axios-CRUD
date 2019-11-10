@@ -14,7 +14,7 @@ import {
   Thumbnail,
 } from 'native-base';
 
-export default class Addscreen extends Component {
+export default class AddScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {

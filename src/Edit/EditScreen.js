@@ -20,7 +20,7 @@ import {
 import {FlatList} from 'react-native';
 import axios from 'axios';
 
-export default class Editscreen extends Component {
+export default class EditScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
