@@ -1,31 +1,42 @@
-/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable no-unused-vars */
+/* eslint-disable react-native/no-inline-styles */
 import React, {Component} from 'react';
-import {Alert, Platform, StyleSheet, View, StatusBar} from 'react-native';
+import {
+  StyleSheet,
+  View,
+  StatusBar,
+  ScrollView,
+  AsyncStorage,
+  ToastAndroid,
+} from 'react-native';
 import {
   Content,
   Fab,
-  Button,
   Icon,
   Spinner,
   ListItem,
   Left,
   Body,
   Right,
-  Thumbnail,
+  Title,
+  List,
+  Header,
   Text,
 } from 'native-base';
 import axios from 'axios';
-import ListItems from './component/ListItems';
+import {StackActions} from 'react-navigation';
 
 export default class HomeScreen extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      data: [],
-      loading: false,
+      items: [],
+      loading: true,
     };
+    this.makeRemoteRequest = this.makeRemoteRequest.bind(this);
+    this.renderItems = this.renderItems.bind(this);
+    this.handlePostClick = this.handlePostClick.bind(this);
   }
 
   makeRemoteRequest = () => {
@@ -34,151 +45,113 @@ export default class HomeScreen extends Component {
       axios
         .get('http://ec2-3-81-168-96.compute-1.amazonaws.com/api/materi')
         .then(res => {
-          const newData = this.state.data.concat(res.data);
+          // const newData = this.state.data.concat(res.data);
           this.setState({
             loading: false,
-            data: newData,
+            items: res.data.data,
           });
         })
         .catch(err => {
-          throw err;
+          console.log(err);
         });
     }, 1500);
   };
+
   componentDidMount() {
     this.makeRemoteRequest();
   }
-  handlePostClick = (thumbnail, title, content) => {
-    axios
-      .post('http://ec2-3-81-168-96.compute-1.amazonaws.com/api/materi', {
-        thumbnail,
-        title,
-        content,
-      })
-      .then(response => {
-        const newData = this.state.data.concat(response.data);
-        this.setState({
-          data: newData,
-        });
-        this.props.navigation.popToTop();
-      })
-      .catch(error => {
-        throw error;
-      });
-  };
-  renderFooter = () => {
-    if (this.state.loading === false) return null;
-    return (
-      <View>
-        <Spinner color="#1e88e5" />
-        <Text
-          style={{
-            color: '#aaa',
-            fontSize: 12,
-            textAlign: 'center',
-            bottom: 10,
-          }}>
-          Loading data
-        </Text>
-      </View>
-    );
+
+  DetailPost = id => {
+    const pushAction = StackActions.push({
+      routeName: 'Detail',
+      params: {
+        id: id,
+      },
+    });
+    this.props.navigation.dispatch(pushAction);
   };
 
-  handleEdit = (thumbnail, title, content, id) => {
-    axios
-      .put('http://ec2-3-81-168-96.compute-1.amazonaws.com/api/materi/${id}', {
-        thumbnail,
-        title,
-        content,
-      })
-      .then(response => {
-        this.setState({
-          data: response.data,
-        });
-        this.props.navigation.popToTop();
-      })
-      .catch(error => {
-        throw error;
-      });
+  addPost = () => {
+    const pushAction = StackActions.push({
+      routeName: 'Add',
+      params: {
+        handlePostClick: this.handlePostClick,
+      },
+    });
+    this.props.navigation.dispatch(pushAction);
   };
-  handleDelete = (id, index) => {
+
+  handlePostClick = async payload => {
+    const token = await AsyncStorage.getItem('access_token');
+    this.setState({isLoading: true});
+    this.props.navigation.dispatch(StackActions.popToTop());
     axios
-      .delete('http://ec2-3-81-168-96.compute-1.amazonaws.com/api/materi/${id}')
+      .post(
+        'http://ec2-3-81-168-96.compute-1.amazonaws.com/api/materi',
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
       .then(res => {
-        const newData = this.state.data.concat();
-        newData.slice(index, 1);
-
+        const newData = this.state.items.concat(res.data.data);
         this.setState({
-          data: newData,
+          items: newData,
+          isLoading: false,
         });
       })
       .catch(err => {
-        throw err;
+        console.log(err);
+        this.setState({
+          isLoading: false,
+        });
       });
   };
 
-  renderList = (item, index) => {
-    return (
-      <ListItem
-        style={{marginRight: 20}}
-        avatar
-        key={index}
-        onPress={() =>
-          this.props.navigation.navigate('Edit', {
-            id: item._id,
-            handleEdit: this.handleEdit,
-          })
-        }
-        onLongPress={() =>
-          Alert.alert(
-            'Are you sure',
-            'you want to delete this List ?',
-            [
-              {text: 'Cancel', onPress: () => null},
-              {text: 'OK', onPress: () => this.handleDelete(item._id, index)},
-            ],
-            {cancelable: false},
-          )
-        }>
-        <Left>
-          <Thumbnail
-            style={{backgroundColor: '#1e88e5'}}
-            source={{
-              uri:
-                'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Gnome-stock_person.svg/1024px-Gnome-stock_person.svg.png',
-            }}
-          />
-        </Left>
-        <Body>
-          <Text>{item.thumbnail}</Text>
-          <Text note>{item.title}</Text>
-          <Text note>{item.content}</Text>
-        </Body>
-      </ListItem>
-    );
+  renderItems = () => {
+    if (this.state.loading) {
+      return <Spinner />;
+    } else {
+      const listItem = this.state.items.map(data => (
+        <ListItem
+          key={data.uuid}
+          onPress={() => this.DetailPost(data.uuid)}
+          icon
+          style={{marginVertical: 10}}>
+          <Left />
+          <Body onPress={() => this.DetailPost(data.uuid)}>
+            <Text>{data.title}</Text>
+          </Body>
+        </ListItem>
+      ));
+      return listItem;
+    }
   };
 
   render() {
     return (
       <View style={styles.container}>
         <StatusBar backgroundColor="#1e88e5" barStyle="light-content" />
-        <View style={{flex: 1}}>
-          <ListItems
-            {...this.props}
-            data={this.state.data}
-            renderList={this.renderList}
-            renderFooter={this.renderFooter}
-          />
-        </View>
+        <Header>
+          <Body color="#1e88e5">
+            <Title>Home</Title>
+          </Body>
+          <Right />
+        </Header>
+        <Content>
+          <ScrollView>
+            <List style={{marginTop: 20}}>{this.renderItems()}</List>
+          </ScrollView>
+        </Content>
         <Fab
           style={{backgroundColor: '#1e88e5'}}
           position="bottomRight"
-          onPress={() =>
-            this.props.navigation.navigate('Add', {
-              handlePostClick: this.handlePostClick,
-            })
-          }>
-          <Icon type="FontAwesome" name="pencil" />
+          onPress={() => {
+            this.addPost();
+          }}>
+          <Icon name="add" />
         </Fab>
       </View>
     );

@@ -1,15 +1,30 @@
 import {createStackNavigator} from 'react-navigation-stack';
-import {createAppContainer} from 'react-navigation';
-import HomeScreen from '../Home/HomeScreen.js';
-import AddScreen from '../Add/AddScreen.js';
-import EditScreen from '../Edit/EditScreen.js';
-import ListItems from '../Home/component/ListItems.js';
-const RootStack = createStackNavigator(
+import HomeScreen from '../Home/HomeScreen';
+import AddScreen from '../Add/AddScreen';
+import EditScreen from '../Edit/EditScreen';
+import DetailScreen from '../Detail/DetailScreen';
+import LoginScreen from '../Login/LoginScreen';
+
+export const LoginStack = createStackNavigator({
+  Login: {
+    screen: LoginScreen,
+  },
+});
+
+export const RootStack = createStackNavigator(
   {
-    Home: HomeScreen,
-    Add: AddScreen,
-    Edit: EditScreen,
-    List: ListItems,
+    Home: {
+      screen: HomeScreen,
+    },
+    Add: {
+      screen: AddScreen,
+    },
+    Edit: {
+      screen: EditScreen,
+    },
+    Detail: {
+      screen: DetailScreen,
+    },
   },
   {
     initialRouteName: 'Home',
@@ -17,11 +32,10 @@ const RootStack = createStackNavigator(
       headerStyle: {
         backgroundColor: '#1e88e5',
       },
-      headerTintColor: '#fff',
+      headerTintColor: '#6807f9',
       headerTitleStyle: {
         fontWeight: 'bold',
       },
     },
   },
 );
-export default createAppContainer(RootStack);

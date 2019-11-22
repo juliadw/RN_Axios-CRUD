@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
 import React, {Component} from 'react';
+import {StackActions} from 'react-navigation';
 import {
   Container,
   Content,
@@ -10,8 +11,9 @@ import {
   Input,
   Button,
   Text,
-  Label,
-  Thumbnail,
+  Header,
+  Body,
+  Right,
 } from 'native-base';
 
 export default class AddScreen extends Component {
@@ -22,31 +24,16 @@ export default class AddScreen extends Component {
       content: '',
       title: '',
     };
+    this.handlePostClick = this.handlePostClick.bind(this);
   }
-  handleThumbnail = val => {
-    this.state({
-      thumbnail: val,
-    });
-  };
-
-  handleTitle = val => {
-    this.state({
-      title: val,
-    });
-  };
-
-  handleContent = val => {
-    this.state({
-      content: val,
-    });
-  };
-  handlePostClick = () => {
+  handlePostClick = async () => {
     const {thumbnail, title, content} = this.state;
-    this.props.navigation.state.params.handlePostClick(
+    const payload = {
       thumbnail,
       title,
       content,
-    );
+    };
+    this.props.navigation.state.params.handlePostClick(payload);
     this.setState({
       thumbnail: '',
       title: '',
@@ -54,50 +41,45 @@ export default class AddScreen extends Component {
     });
   };
   render() {
+    const {thumbnail, title, content} = this.state;
     return (
       <Container>
+        <Header>
+          <Body>
+            <Title>Add Post</Title>
+          </Body>
+          <Right />
+        </Header>
         <Content>
-          <Thumbnail
-            style={{
-              marginTop: 20,
-              marginBottom: 10,
-              alignSelf: 'center',
-              backgroundColor: '#1e88e5',
-            }}
-            source={{
-              uri:
-                'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Gnome-stock_person.svg/1024px-Gnome-stock_person.svg.png',
-            }}
-          />
-          <Form style={{marginRight: 20, marginLeft: 5}}>
-            <Item floatingLabel>
-              <Label>Thumbnail</Label>
+          <Form>
+            <Item>
               <Input
-                value={this.state.thumbnail}
-                onChangeText={this.handleThumbnail}
-                required
+                placeholder="Thumbnail"
+                value={thumbnail}
+                onChangeText={value => this.setState({thumbnail: value})}
               />
             </Item>
-            <Item floatingLabel>
-              <Label>Title</Label>
+            <Item>
               <Input
-                value={this.state.title}
-                onChangeText={this.handleTitle}
-                required
+                placeholder="Title"
+                value={title}
+                onChangeText={value => this.setState({title: value})}
               />
             </Item>
-            <Item floatingLabel>
-              <Label>Content</Label>
+            <Item>
               <Input
-                value={this.state.content}
-                onChangeText={this.handleContent}
-                required
+                placeholder="Content"
+                value={content}
+                onChangeText={value => this.setState({content: value})}
               />
             </Item>
+            <Button
+              block
+              style={{marginTop: 24, marginHorizontal: 12}}
+              onPress={this.handlePostClick}>
+              <Text>Submit</Text>
+            </Button>
           </Form>
-          <Button block transparent onPress={this.handlePostClick}>
-            <Text>Done</Text>
-          </Button>
         </Content>
       </Container>
     );
